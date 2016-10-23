@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Architecture et bases de PHP | TP MMI - S3</title>
+
+		<meta name="author" content="Jérôme Fath">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+				<section>
+					<section>
+						<h1>Architecture</h1>
+						<p>L'architecture de votre projet devra être organisée de la manière suivante :</p>
+						<ul>
+							<li>
+								<strong>pages</strong> (le répertoire regroupant vos pages PHP)
+							</li>
+							<li>
+								<strong>src</strong> (le répertoire de vos classes PHP)
+							</li>
+							<li>
+								<strong>web</strong>
+							</li>
+							<ul>
+								<li>css</li>
+								<li>js</li>
+								<li>img</li>
+							</ul>
+						</ul>
+					</section>
+					<section>
+						<h1>Virtual Host (+)</h1>
+						<p>Configurez un virtual host Apache pointant sur votre répertoire <mark>web</mark>.</p>
+						<pre>
+&lsaquo;VirtualHost *:80&rsaquo;
+	ServerName portfolio.local
+	ServerAlias portfolio.local
+	DocumentRoot /var/www/portfolio
+	&lsaquo;Directory "/var/www/portfolio/web/"&rsaquo;
+		Options +Indexes +Includes +FollowSymLinks +MultiViews
+		AllowOverride All
+	&lsaquo;/Directory&rsaquo;
+&lsaquo;/VirtualHost&rsaquo;
+						</pre>
+						<p class="fragment">
+							<em>N'oubliez pas de configurer votre fichier hosts.</em>
+						</p>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h1>Point d'entrée</h1>
+						<p>Créez avec votre éditeur de code un fichier nommé <mark>index.php</mark> à la racine de votre répertoire <mark>web</mark>.</p>
+						<p class="fragment">
+							<em>index.php va permettre le chargement de l'ensemble de vos pages.</em>
+						</p>
+					</section>
+					<section>
+						<h1>A propos</h1>
+						<p>Créez un fichier <mark>about.php</mark> dans le répertoire <mark>pages</mark> afin de vous présenter.</p>
+						<p>
+							<strong>Ajoutez seulement du code HTML dans cette page.</strong>
+						</p>
+					</section>
+					<section>
+						<h1>Inclusion</h1>
+						<p>Dans <mark>index.php</mark> utilisez la fonction <mark>include</mark> pour charger votre fichier <mark>about.php</mark></p>
+						<pre>
+						   <code class="php">
+include '../pages/about.php';
+						   </code>
+						</pre>
+						<p class="fragment">
+							<em>Normalement votre page doit se charger depuis : <a href="#">http://localhost/portfolio/web/index.php</a> OU <a href="#">http://portfolio.local/index.php</a></em>
+						</p>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h1>SUPERGLOBALE $_GET</h1>
+						<p>Votre fichier <mark>index.php</mark> doit stocker dans une variable la valeur du paramètre <mark>page</mark>.</p>
+						<pre>
+						   <code class="php">
+// http://localhost/portfolio/web/index.php?page=contact
+
+$page = 'about';
+if( isset($_GET['page']) ) {
+    $page = $_GET['page'];
+}
+						   </code>
+						</pre>
+					</section>
+					<section>
+						<h1>Inclusion dynamique</h1>
+						<p>Dans votre fichier <mark>index.php</mark>, vous devez utiliser la variable <mark>$page</mark> pour inclure dynamiquement la page à charger.</p>
+						<pre>
+						   <code class="php">
+$file = '../pages/' . $page . '.php';
+
+//Nous demandons à PHP de tester si le fichier existe.
+if(file_exists($file)) {
+    include $file;
+}
+						   </code>
+						</pre>
+					</section>
+					<section>
+						<h1>Erreur 404 (+)</h1>
+						<p>Dans le cas ou le fichier n'existe pas, nous demandons à PHP de modifier le code de la réponse HTTP pour signaler une erreur 404 à l'internaute.</p>
+						<pre>
+						   <code class="php">
+http_response_code(404);
+include '../errors/404.html';
+						   </code>
+						</pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h1>$_POST</h1>
+						<p>Créez un fichier <mark>contact.php</mark> dans le répertoire <mark>pages</mark> afin d'ajouter un formulaire de contact.</p>
+						<pre>
+						   <code class="xml">
+<form method="post">
+    <div>
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="name"/>
+    </div>
+    <div>
+        <label for="courriel">Courriel :</label>
+        <input type="email" id="courriel" name="email" />
+    </div>
+    <div>
+        <label for="message">Message :</label>
+        <textarea id="message" name="message"></textarea>
+    </div>
+	<button type="submit" name="submit">Envoyer</button>
+</form>
+						   </code>
+						</pre>
+					</section>
+					<section>
+						<h1>Soumission du formulaire</h1>
+						<p>Contrôlez les valeurs envoyées depuis le formulaire HTML et stockez les messages d'erreurs dans un tableau PHP, <strong>contrôlez bien si le formulaire a été soumis.</strong></p>
+						<pre>
+						   <code class="php">
+$errors = [];
+if(empty($_POST['name'])) {
+  $errors[] = 'Merci de renseigner votre nom.';
+}
+
+// Votre code php
+
+?>
+<!-- Votre code HTML -->
+						   </code>
+						</pre>
+					</section>
+					<section>
+						<h1>Afficher les erreurs</h1>
+						<pre>
+							<code class="php">
+<!-- Votre code HTML -->
+&lsaquo;?php if(sizeof($errors) > 0) : ?&rsaquo;
+	<div class="alert alert-success">
+		<strong>Attention!</strong> Votre formulaire comporte des erreurs.
+		<ul>
+			&lsaquo;?php foreach($errors as $error) : ?&rsaquo;
+			<li>&lsaquo;?php echo $error; ?&rsaquo;</li>
+			&lsaquo;php endforeach; ?&rsaquo;
+		</ul>
+	</div>
+&lsaquo;?php endif; ?&rsaquo;
+<!-- Votre code HTML -->
+							</code>
+						</pre>
+					</section>
+					<section>
+						<h1>Envoyer un mail</h1>
+						<p>Dans le cas ou le formulaire est soumis et qu'aucune erreur n'est détectée, il faudra envoyer un mail.</p>
+						<pre>
+						   <code class="php">
+mail('my-address@domain.com', 'Contact - Portfolio', $message);
+						   </code>
+						</pre>
+					</section>
+					<section>
+						<h1>Swift Mailer (+)</h1>
+						<p>Téléchargez le gestionnaire de dépendances PHP nommé <a href="https://getcomposer.org/download/">Composer</a> afin d'installer la librairie d'envoi de mail Swift Mailer.</p>
+						<pre>
+						   <code class="sh">
+composer require swiftmailer/swiftmailer
+						   </code>
+						</pre>
+						<p class="fragment">
+							<em>N'oubliez pas d'inclure dans <mark>index.php</mark> le fichier <mark>autoload.php</mark> situé dans le dossier vendor généré par Composer.</em>
+						</p>
+					</section>
+				</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
